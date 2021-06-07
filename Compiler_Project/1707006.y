@@ -5,12 +5,36 @@
 	#include<string.h>
 	#include<stdarg.h>
 	int data[60];
+	int yylex();
+	extern FILE *yyin,*yyout;
+	int i,f=0;
+	typedef struct variable {
+			char *str;
+	    		int n;
+			}array;
+	array store[1000];
+	void yyerror(char *s);
+	void vari (array *p, char *s, int n);
+	void valassig (char *s, int n);
+	int check(char *key);
+	int count = 1,cnt = 1,sw=0;
+	int q=0,prev=0;
+	float fl;
 %}
 
 /* bison declarations */
 
-%token NUM VAR IF ELIF ELSE MAIN INT FLOAT CHAR COM START END SWITCH CASE DEFAULT BREAK LOOP PF SIN COS TAN LOG LOG10
-%nonassoc IFX
+%union 
+{
+	 int number;
+     char *string;
+}
+
+%token <string> VAR
+%type <number> expression statement
+%token <number> NUM
+%token IF ELIF ELSE MAIN INT FLOAT CHAR COM START END SWITCH CASE DEFAULT BREAK LOOP PF SIN COS TAN LOG LOG10
+%nonassoc IF
 %nonassoc ELSE
 %nonassoc SWITCH
 %nonassoc CASE
@@ -32,37 +56,43 @@ cstatement: /* NULL */
 	| cstatement statement
 	;
 
-statement: ';'			
+statement: ';'		{}	
 	| declaration ';'		{ printf("Declaration\n"); }
 
 	| expression ';' 			{}
 	
 	| VAR '=' expression ';' { 
-							data[$1] = $3; 
-							printf("Value of the variable: %d\t\n",$3);
-							$$=$3;
-						} 
+								if(check($1))
+								{
+									valassig ($1,$3);
+									printf("\nValue of the Variable (%s)= %d\t\n",$1,$3);
+								}
+								else
+								{
+									printf("\n(%s) Variable Not DEclared\n",$1); 
+								}
+							} 
 	| COM	{
 				printf("This is a single line comment.\n");
 		}
    
-	| LOOP '(' expression '<' expression ';' expression '+''+' ')' START statement END {
+	| LOOP '(' expression '<' expression ';' expression '+''+' ')' START expression '=' expression ';' END {
 	                                int i;
-	                                for(i=$3 ; i<$5 ; i++) {printf("value of variable: %d expression value: %d\n", i,$12);}									
+	                                for(i=$3 ; i<$5 ; i++) {printf("value of variable: %d expression value: %d\n", i,$14);}									
 				               }
-	| LOOP '(' expression '>' expression ';' expression '-''-' ')' START statement END {
+	| LOOP '(' expression '>' expression ';' expression '-''-' ')' START expression '=' expression ';' END {
 	                                int i;
-	                                for(i=$3 ; i>$5 ; i--) {printf("value of variable: %d expression value: %d\n", i,$12);}									
+	                                for(i=$3 ; i>$5 ; i--) {printf("value of variable: %d expression value: %d\n", i,$14);}									
 				               }
-	| LOOP '(' expression '<' expression ';' expression '-''-' ')' START statement END {
+	| LOOP '(' expression '<' expression ';' expression '-''-' ')' START expression '=' expression ';' END {
 	                                int i;
-	                                for(i=$5 ; i>$3 ; i--) {printf("value of variable: %d expression value: %d\n", i,$12);}									
+	                                for(i=$5 ; i>$3 ; i--) {printf("value of variable: %d expression value: %d\n", i,$14);}									
 				               }
-	| LOOP '(' expression '>' expression ';' expression '+''+' ')' START statement END {
+	| LOOP '(' expression '>' expression ';' expression '+''+' ')' START expression '=' expression ';' END {
 	                                int i;
-	                                for(i=$5 ; i<$3 ; i++) {printf("value of variable: %d expression value: %d\n", i,$12);}									
+	                                for(i=$5 ; i<$3 ; i++) {printf("value of variable: %d expression value: %d\n", i,$14);}									
 				               }
-	| SWITCH '(' VAR ')' START B  END
+	| SWITCH '(' expression ')' START B  END {}
 
 	| IF '(' expression ')' START expression ';' END %prec IFX {
 								if($3){
@@ -95,7 +125,7 @@ C   : C C
 	;
 D   : DEFAULT ':' expression ';' BREAK ';' {}
 	
-declaration : TYPE ID1   
+declaration : TYPE ID1 {} 
              ;
 
 
@@ -106,13 +136,39 @@ TYPE : INT
 
 
 
-ID1 : ID1 ',' VAR  
-    |VAR  
-    ;
+ID1 : ID1 ',' ID2 {}
+	| ID2 {}
+	| {}
+;
+  
+ID2 : VAR {				if(check($1))
+						{
+							printf("\nERROR:Multiple Declaration Of (%s) \n", $1 );
+						}
+						else
+						{
+							printf("(%s) Variable Declared\n",$1);
+							vari(&store[count],$1, count);
+							count++;
+						}
+			} 
+    
 
+ 
 expression: NUM					{ $$ = $1; 	}
 
-	| VAR						{ $$ = data[$1]; }
+	| VAR 	{	int i = 1;
+				char *name = store[i].str;
+				while (name) 
+				{
+					if (strcmp(name, $1) == 0)
+					{
+						$$ = (int)store[i].n;
+						break;
+					}
+						name = store[++i].str;
+				}
+			}						
 	
 	| expression '+' expression	{ $$ = $1 + $3; }
 
@@ -154,8 +210,54 @@ expression: NUM					{ $$ = $1; 	}
 	;
 %%
 
+void vari(array *p, char *s, int n)
+				{
+				  p->str = s;
+				  p->n = n;
+				}
+void valassig(char *s, int num)
+			{
+				    int i = 1;
+				    char *name = store[i].str;
+				    while (name) {
+				        if (strcmp(name, s) == 0){
+					store[i].n=num;
+						break;
+				            }
+					name = store[++i].str;
+				}
+			}
 
-yyerror(char *s){
+int check(char *key)
+			{
+				
+			    int i = 1;
+			    char *name = store[i].str;
+			    while (name) {
+				        if (strcmp(name, key) == 0){
+						return i;
+					}
+						name = store[++i].str;
+				}
+			    return 0;
+			}
+void yyerror(char *s){
 	printf( "%s\n", s);
+}
+int yywrap()
+{
+	return 1;
+}
+
+int main()
+{
+	freopen("input.txt","r",stdin);
+	freopen("output.txt","w",stdout);
+	yyparse();
+
+	fclose(yyin);
+ 	fclose(yyout);
+    
+	return 0;
 }
 

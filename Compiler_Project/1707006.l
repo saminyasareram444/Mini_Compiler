@@ -3,10 +3,11 @@
 	#include<string.h>
 	#include<stdlib.h>
 	#include<math.h>
+	#include<stdarg.h>
 	#include "1707006.tab.h"
 %}
 
-alpha [a-zA-Z]
+alpha [a-zA-Z][a-zA-Z0-9]*
 digit [0-9]
 keyWord					IF|ELIF|ELSE|LOOP|RETURN|INTGR|FLOATING|CHARAC|SWITCHING|CASING|BREAK|DEF|PRINTS
 singleLineComment		[ ]*[#][#][a-zA-Z0-9@$%^&*(){}_+-,.:\|?>< ]*
@@ -14,8 +15,7 @@ singleLineComment		[ ]*[#][#][a-zA-Z0-9@$%^&*(){}_+-,.:\|?>< ]*
 
 %%
 
-{digit}+	{ yylval = atoi(yytext); return NUM; }
-{alpha}	    { yylval = *yytext - 'a'; return	VAR; }
+
 
 SWITCHING 		   { return SWITCH; }
 PRINTS 		       { return PF; }
@@ -36,11 +36,15 @@ LOG 		   {return LOG10;}
 
 {singleLineComment}		{return COM;}
 
-[-+/*<>=,():;%^]     {yylval = yytext[0];	return *yytext;	}
+
 INTGR  			 {return INT;}
 CHARAC 		         {return CHAR;}
 FLOATING 			 	{return FLOAT;}
 "main"	   { return MAIN; }
+
+{digit}+	{ yylval.number = atoi(yytext);	 return NUM; }
+{alpha}	    { yylval.string = strdup(yytext);	 return VAR; }
+[-+/*<>=,():;%^]     { return *yytext;	}
 [ ]*	    			{}
 [\n]*					{}
 [\t]*					{}
@@ -48,16 +52,3 @@ FLOATING 			 	{return FLOAT;}
 
 
 %%
-int yywrap()
-{
-	return 1;
-}
-
-int main()
-{
-	freopen("input.txt","r",stdin);
-	freopen("output.txt","w",stdout);
-	yyparse();
-    
-	return 0;
-}

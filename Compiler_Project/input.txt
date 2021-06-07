@@ -1,10 +1,10 @@
 main:
 {
 	##STARTING THE CODE
-	INTGR a,b,c;
+	INTGR a,b,cc,d;
 	a=2;
 	b=1;
-	c=5;
+	cc=5;
 	IF(b>a)
 	{
 		a+b;
@@ -24,17 +24,17 @@ main:
 		a + b; BREAK;
 	
 	CASING 2 :
-		b + c; BREAK;
+		b + cc; BREAK;
 	
 	CASING 3 : 
-		a + c; BREAK;
+		a + cc; BREAK;
 	DEF :
-		c + i; BREAK;
+		cc + i; BREAK;
 	}
 
-	LOOP (c>b;b++)
+	LOOP (cc>b;b++)
 	{
-	a=b+c;
+	d=a+b;
 	}
 	PRINTS(a);
 	LOG(1000);
