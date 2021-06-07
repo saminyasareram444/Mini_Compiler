@@ -1,0 +1,45 @@
+main:
+{
+	##STARTING THE CODE
+	INTGR a,b,c;
+	a=2;
+	b=1;
+	c=5;
+	IF(b>a)
+	{
+		a+b;
+	}
+	ELIF(b<a)
+	{
+		b-a;
+	}
+	ELSE
+	{
+		a*b;
+	}
+
+	SWITCHING ( a )
+	{
+	CASING 1 :
+		a + b; BREAK;
+	
+	CASING 2 :
+		b + c; BREAK;
+	
+	CASING 3 : 
+		a + c; BREAK;
+	DEF :
+		c + i; BREAK;
+	}
+
+	LOOP (c>b;b++)
+	{
+	a=b+c;
+	}
+	PRINTS(a);
+	LOG(1000);
+	LN(256);
+	3^3;
+	SIN(30);
+	
+}	
